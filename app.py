@@ -5,18 +5,18 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-# 1. Load your Zarr dataset
-ds = xr.open_zarr('GFED5_combined_2002_2022.zarr')
+# # 1. Load your Zarr dataset
+# ds = xr.open_zarr('GFED5_combined_2002_2022.zarr')
 
-# 2. Inspect the dataset structure (optional but recommended)
-print("Dataset info:")
-print(ds)
-print("\nData variables:")
-print(list(ds.data_vars))
-print("\nDimensions:")
-print(ds.dims)
-print("\nCoordinates:")
-print(list(ds.coords))
+# # 2. Inspect the dataset structure (optional but recommended)
+# print("Dataset info:")
+# print(ds)
+# print("\nData variables:")
+# print(list(ds.data_vars))
+# print("\nDimensions:")
+# print(ds.dims)
+# print("\nCoordinates:")
+# print(list(ds.coords))
 
 # 3. Create FastAPI application
 app = FastAPI(
@@ -38,25 +38,25 @@ md = TilerFactory(
 # 5. Include the router in your FastAPI app
 app.include_router(md.router, prefix="/md", tags=["Multi Dimensional"])
 
-# 6. Add dataset info endpoint
-@app.get("/info")
-async def dataset_info():
-    """Get information about the GFED5 dataset"""
-    return {
-        "variables": list(ds.data_vars),
-        "dimensions": dict(ds.dims),
-        "coordinates": list(ds.coords),
-        "shape": {var: ds[var].shape for var in ds.data_vars},
-        "attrs": ds.attrs,
-        "data_vars_info": {
-            var: {
-                "shape": ds[var].shape,
-                "dims": ds[var].dims,
-                "dtype": str(ds[var].dtype),
-                "attrs": ds[var].attrs
-            } for var in ds.data_vars
-        }
-    }
+# # 6. Add dataset info endpoint
+# @app.get("/info")
+# async def dataset_info():
+#     """Get information about the GFED5 dataset"""
+#     return {
+#         "variables": list(ds.data_vars),
+#         "dimensions": dict(ds.dims),
+#         "coordinates": list(ds.coords),
+#         "shape": {var: ds[var].shape for var in ds.data_vars},
+#         "attrs": ds.attrs,
+#         "data_vars_info": {
+#             var: {
+#                 "shape": ds[var].shape,
+#                 "dims": ds[var].dims,
+#                 "dtype": str(ds[var].dtype),
+#                 "attrs": ds[var].attrs
+#             } for var in ds.data_vars
+#         }
+#     }
 
 # 7. Simple web viewer
 @app.get("/", response_class=HTMLResponse)
@@ -64,8 +64,8 @@ async def viewer():
     """Interactive leaflet viewer for the GFED5 tiles"""
     
     # Get available variables
-    variables = list(ds.data_vars)
-    times = list(ds.time.values)
+    variables = ['CO', 'CO2', 'CH4', 'SO2']
+    times = ['2002-01-01T01:00:00.000000000', '2002-02-01T01:00:00.000000000','2002-03-01T01:00:00.000000000', '2002-04-01T01:00:00.000000000']
     first_var = variables[0] if variables else "CO"
     
     html_content = f"""
@@ -147,6 +147,9 @@ async def viewer():
     </head>
     <body>
         <div id="controls">
+            <label> URL: </label>
+            <input type="text" id="urlInput" placeholder="P" title="e.g., GFED.zarr">
+
             <label>Variable:</label>
             <select id="variableSelect">
                 {"".join(f'<option value="{var}">{var}</option>' for var in variables)}
@@ -264,6 +267,7 @@ async def viewer():
             
             // Function to update the data layer
             function updateLayer() {{
+                var url_data = document.getElementById('urlInput').value;
                 var variable = document.getElementById('variableSelect').value;
                 var time = document.getElementById('timeSelect').value;
                 var colormap = document.getElementById('colormapSelect').value;
@@ -279,7 +283,7 @@ async def viewer():
                 }}
                 
                 // Build tile URL - using the dataset file path directly
-                var tileUrl = `http://localhost:8000/md/tiles/WorldMercatorWGS84Quad/{{z}}/{{x}}/{{y}}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=${{variable}}&sel=time%3D${{time}}&colormap_name=${{colormap}}&nodata=0`;
+                var tileUrl = `http://localhost:8000/md/tiles/WorldMercatorWGS84Quad/{{z}}/{{x}}/{{y}}.png?url=${{url_data}}&variable=${{variable}}&sel=time%3D${{time}}&colormap_name=${{colormap}}&nodata=0`;
                 
                 // Add rescale parameter if specified
                 if (rescale && rescale.trim()) {{
@@ -296,11 +300,12 @@ async def viewer():
             }}
             // Fetch and display time series data without Plotly
             async function fetchTimeSeries(lat, lon, variable) {{
+                var url_data = document.getElementById('urlInput').value;
                 var variable = document.getElementById('variableSelect').value;
                 var coordinates = `${{lon.toFixed(6)}},${{lat.toFixed(6)}}`;
 
                 try {{
-                    var url = `http://localhost:8000/md/point/${{coordinates}}?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=${{variable}}`;
+                    var url = `http://localhost:8000/md/point/${{coordinates}}?url=${{url_data}}&variable=${{variable}}`;
 
                     var response = await fetch(url);
                     if (!response.ok) throw new Error(`HTTP error: ${{response.status}}`);
@@ -392,22 +397,22 @@ async def viewer_redirect():
 
 # 10. Run the server
 if __name__ == "__main__":
-    print("=" * 50)
-    print("Starting GFED5 TiTiler.xarray server...")
-    print("=" * 50)
-    print("Available endpoints:")
-    print("- Interactive viewer: http://localhost:8000/")
-    print("- Dataset info: http://localhost:8000/info")
-    print("- API documentation: http://localhost:8000/api.html")
-    print("- Health check: http://localhost:8000/health")
-    print()
-    print("Tile URL format:")
-    print("http://localhost:8000/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=YOUR_VARIABLE")
-    print()
-    print("Available variables in your dataset:")
-    for var in ds.data_vars:
-        print(f"  - {var}")
-    print("=" * 50)
+    # print("=" * 50)
+    # print("Starting GFED5 TiTiler.xarray server...")
+    # print("=" * 50)
+    # print("Available endpoints:")
+    # print("- Interactive viewer: http://localhost:8000/")
+    # print("- Dataset info: http://localhost:8000/info")
+    # print("- API documentation: http://localhost:8000/api.html")
+    # print("- Health check: http://localhost:8000/health")
+    # print()
+    # print("Tile URL format:")
+    # print("http://localhost:8000/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=YOUR_VARIABLE")
+    # print()
+    # print("Available variables in your dataset:")
+    # for var in ds.data_vars:
+    #     print(f"  - {var}")
+    # print("=" * 50)
     
     # Start the server
     uvicorn.run(app, host="0.0.0.0", port=8000)
