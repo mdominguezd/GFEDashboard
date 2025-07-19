@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: gfed5-viewer
+    runtime: python
+    buildCommand: ""
+    startCommand: uvicorn app:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
