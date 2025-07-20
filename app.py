@@ -276,7 +276,7 @@ async def viewer():
                 }}
                 
                 // Build tile URL - using the dataset file path directly
-                var tileUrl = `http://localhost:8000/md/tiles/WorldMercatorWGS84Quad/{{z}}/{{x}}/{{y}}.png?url=${{url_data}}&variable=${{variable}}&sel=time%3D${{time}}&colormap_name=${{colormap}}&nodata=0`;
+                var tileUrl = `https://gfedashboard.onrender.com/md/tiles/WorldMercatorWGS84Quad/{{z}}/{{x}}/{{y}}.png?url=${{url_data}}&variable=${{variable}}&sel=time%3D${{time}}&colormap_name=${{colormap}}&nodata=0`;
                 
                 // Add rescale parameter if specified
                 if (rescale && rescale.trim()) {{
@@ -298,7 +298,7 @@ async def viewer():
                 var coordinates = `${{lon.toFixed(6)}},${{lat.toFixed(6)}}`;
 
                 try {{
-                    var url = `http://localhost:8000/md/point/${{coordinates}}?url=${{url_data}}&variable=${{variable}}`;
+                    var url = `https://gfedashboard.onrender.com/md/point/${{coordinates}}?url=${{url_data}}&variable=${{variable}}`;
 
                     var response = await fetch(url);
                     if (!response.ok) throw new Error(`HTTP error: ${{response.status}}`);
@@ -372,13 +372,13 @@ if __name__ == "__main__":
     # print("Starting GFED5 TiTiler.xarray server...")
     # print("=" * 50)
     # print("Available endpoints:")
-    # print("- Interactive viewer: http://localhost:8000/")
-    # print("- Dataset info: http://localhost:8000/info")
-    # print("- API documentation: http://localhost:8000/api.html")
-    # print("- Health check: http://localhost:8000/health")
+    # print("- Interactive viewer: https://gfedashboard.onrender.com/")
+    # print("- Dataset info: https://gfedashboard.onrender.com/info")
+    # print("- API documentation: https://gfedashboard.onrender.com/api.html")
+    # print("- Health check: https://gfedashboard.onrender.com/health")
     # print()
     # print("Tile URL format:")
-    # print("http://localhost:8000/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=YOUR_VARIABLE")
+    # print("https://gfedashboard.onrender.com/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=YOUR_VARIABLE")
     # print()
     # print("Available variables in your dataset:")
     # for var in ds.data_vars:
@@ -393,10 +393,10 @@ if __name__ == "__main__":
 Once the server is running, you can access tiles directly:
 
 Basic tile URL:
-http://localhost:8000/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=your_variable_name
+https://gfedashboard.onrender.com/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=your_variable_name
 
 With additional parameters:
-http://localhost:8000/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=your_variable_name&colormap=viridis&rescale=0,100
+https://gfedashboard.onrender.com/md/tiles/{z}/{x}/{y}.png?url=/mnt/c/Users/domin022/Dropbox/PhD/GFEDashboard/GFED5_combined_2002_2022.zarr&variable=your_variable_name&colormap=viridis&rescale=0,100
 
 Common parameters:
 - variable: name of the variable to visualize
