@@ -305,7 +305,7 @@ async def viewer():
                     var maxVal = Math.max(...values);
                     var minVal = Math.min(...values);
                     var width = 700;
-                    var height = 300;
+                    var height = 230;
                     var padding = 50;
 
                     var points = values.map((val, i) => {{
@@ -337,18 +337,9 @@ async def viewer():
                     var svg = `
                         <svg width="${{width}}" height="${{height}}" style="border:1px solid #ccc; background:#fff">
                             <text x="${{padding}}" y="20" font-size="16" fill="black">Time Series for ${{variable}}</text>
+                            <text x="${{padding}}" y="35" font-size="12" fill="black">${{values}}</text>
 
-                            <!-- Axes -->
-                            <line x1="${{padding}}" y1="${{padding}}" x2="${{padding}}" y2="${{height - padding}}" stroke="black" />
-                            <line x1="${{padding}}" y1="${{height - padding}}" x2="${{width - padding}}" y2="${{height - padding}}" stroke="black" />
-
-                            <!-- Ticks -->
-                            ${{yTickLabels}}
-                            ${{xTickLabels}}
-
-                            <!-- Data line -->
-                            <polyline fill="none" stroke="steelblue" stroke-width="2" points="${{polylinePoints}}" />
-                            ${{points.map(p => `<circle cx="${{p.x}}" cy="${{p.y}}" r="2" fill="steelblue" />`).join('')}}
+                            
                         </svg>
                     `;
 
