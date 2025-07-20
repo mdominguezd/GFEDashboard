@@ -1,22 +1,10 @@
 import xarray as xr
-from titiler.xarray.factory import TilerFactory
+from titiler_patch.factory_patch import TilerFactory
 from titiler.xarray.extensions import VariablesExtension
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-# # 1. Load your Zarr dataset
-# ds = xr.open_zarr('GFED5_combined_2002_2022.zarr')
-
-# # 2. Inspect the dataset structure (optional but recommended)
-# print("Dataset info:")
-# print(ds)
-# print("\nData variables:")
-# print(list(ds.data_vars))
-# print("\nDimensions:")
-# print(ds.dims)
-# print("\nCoordinates:")
-# print(list(ds.coords))
 
 # 3. Create FastAPI application
 app = FastAPI(
@@ -148,7 +136,7 @@ async def viewer():
     <body>
         <div id="controls">
             <label> URL: </label>
-            <input type="text" id="urlInput" placeholder="P" title="e.g., GFED.zarr">
+            <input type="text" id="urlInput" placeholder="https://gfed-test.s3.eu-north-1.amazonaws.com/GFED5_2002.zarr/" value="https://gfed-test.s3.eu-north-1.amazonaws.com/GFED5_2002.zarr/">
 
             <label>Variable:</label>
             <select id="variableSelect">
