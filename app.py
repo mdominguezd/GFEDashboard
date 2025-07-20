@@ -52,8 +52,14 @@ async def viewer():
     """Interactive leaflet viewer for the GFED5 tiles"""
     
     # Get available variables
-    variables = ['CO', 'CO2', 'CH4', 'SO2']
-    times = ['2002-01-01T01:00:00.000000000', '2002-02-01T01:00:00.000000000','2002-03-01T01:00:00.000000000', '2002-04-01T01:00:00.000000000']
+    variables = [
+        "C", "C2H5OH", "C2H4", "C2H2", "C10H16", "C2H6", "burned_area", "basisregions",
+        "BC", "C2H4O", "C2H6S", "C5H8", "C3H6", "C3H6O", "C3H8", "CH2O", "C7H8", "C8H10",
+        "CH3COCHO", "C6H6", "CH3COOH", "CH4", "CO", "CO2", "DM", "CH3OH", "HCN", "H2",
+        "grid_area", "HCOOH", "Higher_Alkanes", "Higher_Alkenes", "HOCH2CHO", "MEK",
+        "N2O", "NH3", "NMOC_g", "NOx", "OC", "PM2p5", "SO2", "Toluene_lump", "TPC"
+    ]
+    times = [d+ '-01T01:00:00.000000000' for d in ['2002-01', '2002-02','2002-03', '2002-04', '2002-05', '2002-06', '2002-07','2002-08', '2002-09', '2002-10', '2002-11', '2002-12'] ]
     first_var = variables[0] if variables else "CO"
     
     html_content = f"""
@@ -136,10 +142,10 @@ async def viewer():
     <body>
         <div id="controls">
             <label> URL: </label>
-            <input type="text" id="urlInput" placeholder="https://gfed-test.s3.eu-north-1.amazonaws.com/GFED5_2002.zarr/" value="https://gfed-test.s3.eu-north-1.amazonaws.com/GFED5_2002.zarr/">
+            <input type="text" id="urlInput" placeholder="URL" value="https://gfed-test.s3.eu-north-1.amazonaws.com/GFED5_2002.zarr/">
 
             <label>Variable:</label>
-            <select id="variableSelect">
+            <select id="variableSelect"> ${{url_data}}
                 {"".join(f'<option value="{var}">{var}</option>' for var in variables)}
             </select>
 
@@ -181,7 +187,7 @@ async def viewer():
         </div>
         
         <div id="info">
-            <div>Dataset: GFED5_combined_2002_2022.zarr</div>
+            <div>Dataset: GFED5</div>
             <div>Variables: {len(variables)}</div>
         </div>
         
@@ -201,7 +207,6 @@ async def viewer():
             
             // Click marker
             var clickMarker = null;
-            
             
             // Add click event listener to the map
             map.on('click', function(e) {{
@@ -286,7 +291,7 @@ async def viewer():
                 
                 console.log('Loading tiles from:', tileUrl);
             }}
-            // Fetch and display time series data without Plotly
+            // Fetch and display time series data with Plotly
             async function fetchTimeSeries(lat, lon, variable) {{
                 var url_data = document.getElementById('urlInput').value;
                 var variable = document.getElementById('variableSelect').value;
@@ -302,49 +307,36 @@ async def viewer():
                     var values = data.values;
                     var labels = data.band_names;
 
-                    var maxVal = Math.max(...values);
-                    var minVal = Math.min(...values);
-                    var width = 700;
-                    var height = 230;
-                    var padding = 50;
+                    // Use Plotly to plot the time series
+                    var plotDivId = "plotly-timeseries";
+                    // Create a div if not exists
+                    var tsDiv = document.getElementById("timeSeriesResult");
+                    tsDiv.innerHTML = `<div id="${{plotDivId}}" style="width:700px;height:250px;"></div>`;
 
-                    var points = values.map((val, i) => {{
-                        var x = padding + (i / (values.length - 1)) * (width - 2 * padding);
-                        var y = height - padding - ((val - minVal) / (maxVal - minVal)) * (height - 2 * padding);
-                        return {{ x, y }};
-                    }});
-
-                    var polylinePoints = points.map(p => `${{p.x}},${{p.y}}`).join(' ');
-
-                    // Generate Y-axis ticks
-                    var yTicks = 5;
-                    var yTickLabels = Array.from({{ length: yTicks + 1 }}, (_, i) => {{
-                        var val = minVal + i * (maxVal - minVal) / yTicks;
-                        var y = height - padding - ((val - minVal) / (maxVal - minVal)) * (height - 2 * padding);
-                        return `<text x="5" y="${{y + 4}}" font-size="10" fill="black">${{val.toFixed(2)}}</text>
-                                <line x1="${{padding - 5}}" y1="${{y}}" x2="${{padding}}" y2="${{y}}" stroke="black" />`;
-                    }}).join('');
-
-                    // Generate X-axis ticks (5 evenly spaced)
-                    var xTicks = 5;
-                    var xTickLabels = Array.from({{ length: xTicks + 1 }}, (_, i) => {{
-                        var idx = Math.round(i * (labels.length - 1) / xTicks);
-                        var x = padding + (idx / (labels.length - 1)) * (width - 2 * padding);
-                        return `<text x="${{x}}" y="${{height - padding + 15}}" font-size="8" fill="black" text-anchor="middle">${{labels[idx].slice(0, 7)}}</text>
-                                <line x1="${{x}}" y1="${{height - padding}}" x2="${{x}}" y2="${{height - padding + 5}}" stroke="black" />`;
-                    }}).join('');
-
-                    var svg = `
-                        <svg width="${{width}}" height="${{height}}" style="border:1px solid #ccc; background:#fff">
-                            <text x="${{padding}}" y="20" font-size="16" fill="black">Time Series for ${{variable}}</text>
-                            <text x="${{padding}}" y="35" font-size="12" fill="black">${{values}}</text>
-
-                            
-                        </svg>
-                    `;
-
-                    document.getElementById("timeSeriesResult").innerHTML = svg;
-
+                    var trace = {{
+                        x: labels,
+                        y: values,
+                        mode: 'lines+markers',
+                        type: 'scatter',
+                        line: {{ color: 'steelblue' }},
+                        marker: {{ size: 6 }},
+                        name: variable
+                    }};
+                    var layout = {{
+                        title: `Time Series for ${{variable}}`,
+                        xaxis: {{
+                            title: 'Time',
+                            tickangle: -45,
+                            automargin: true
+                        }},
+                        yaxis: {{
+                            title: variable,
+                            automargin: true
+                        }},
+                        margin: {{ t: 40, l: 50, r: 20, b: 80 }},
+                        plot_bgcolor: "#fff"
+                    }};
+                    Plotly.newPlot(plotDivId, [trace], layout, {{displayModeBar: false}});
                 }} catch (err) {{
                     console.error("Time series fetch failed", err);
                     document.getElementById("timeSeriesResult").textContent = "Failed to fetch time series.";
